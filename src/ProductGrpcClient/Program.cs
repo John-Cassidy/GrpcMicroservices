@@ -21,6 +21,7 @@ namespace ProductGrpcClient {
             await GetAllProducts(client);
             await AddProductAsync(client);
             await UpdateProductAsync(client);
+            await DeleteProductAsync(client);
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
@@ -94,6 +95,18 @@ namespace ProductGrpcClient {
                                  });
 
             Console.WriteLine("UpdateProductAsync Response: " + updateProductResponse.ToString());
+            Thread.Sleep(1000);
+        }
+
+        private static async Task DeleteProductAsync(ProductProtoServiceClient client) {
+            // DeleteProductAsync
+            Console.WriteLine("DeleteProductAsync started...");
+            var deleteProductResponse = await client.DeleteProductAsync(
+                                 new DeleteProductRequest {
+                                     ProductId = 3
+                                 });
+
+            Console.WriteLine("DeleteProductAsync Response: " + deleteProductResponse.Success.ToString());
             Thread.Sleep(1000);
         }
     }
