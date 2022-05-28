@@ -79,5 +79,25 @@ namespace ProductGrpc.Services {
             var productModel = _mapper.Map<ProductModel>(product);
             return productModel;
         }
+
+        public override async Task<ProductModel> UpdateProduct(UpdateProductRequest request, ServerCallContext context) {
+            var product = _mapper.Map<Product>(request.Product);
+
+            bool isExist = await _productDbContext.Product.AnyAsync(p => p.ProductId == product.ProductId);
+            if (!isExist) {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Product with ID={product.ProductId} is not found."));
+            }
+
+            _productDbContext.Entry(product).State = EntityState.Modified;
+
+            try {
+                await _productDbContext.SaveChangesAsync();
+            } catch (DbUpdateConcurrencyException) {
+                throw;
+            }
+
+            var productModel = _mapper.Map<ProductModel>(product);
+            return productModel;
+        }
     }
 }

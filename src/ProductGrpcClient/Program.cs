@@ -20,7 +20,8 @@ namespace ProductGrpcClient {
             await GetProductAsync(client);
             await GetAllProducts(client);
             await AddProductAsync(client);
-            
+            await UpdateProductAsync(client);
+
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
@@ -74,6 +75,25 @@ namespace ProductGrpcClient {
                                 });
 
             Console.WriteLine("AddProduct Response: " + addProductResponse.ToString());
+            Thread.Sleep(1000);
+        }
+
+        private static async Task UpdateProductAsync(ProductProtoServiceClient client) {
+            // UpdateProductAsync
+            Console.WriteLine("UpdateProductAsync started...");
+            var updateProductResponse = await client.UpdateProductAsync(
+                                 new UpdateProductRequest {
+                                     Product = new ProductModel {
+                                         ProductId = 1,
+                                         Name = "Red",
+                                         Description = "New Red Phone Mi10T",
+                                         Price = 699,
+                                         Status = ProductStatus.Instock,
+                                         CreatedTime = Timestamp.FromDateTime(DateTime.UtcNow)
+                                     }
+                                 });
+
+            Console.WriteLine("UpdateProductAsync Response: " + updateProductResponse.ToString());
             Thread.Sleep(1000);
         }
     }
