@@ -23,6 +23,10 @@ namespace ProductGrpcClient {
             await UpdateProductAsync(client);
             await DeleteProductAsync(client);
 
+            await GetAllProducts(client);
+            await InsertBulkProduct(client);
+            await GetAllProducts(client);
+
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
@@ -107,6 +111,29 @@ namespace ProductGrpcClient {
                                  });
 
             Console.WriteLine("DeleteProductAsync Response: " + deleteProductResponse.Success.ToString());
+            Thread.Sleep(1000);
+        }
+
+        private static async Task InsertBulkProduct(ProductProtoServiceClient client) {
+            // InsertBulkProduct
+            Console.WriteLine("InsertBulkProduct started...");
+            using var clientBulk = client.InsertBulkProduct();
+
+            for (var i = 0; i < 3; i++) {
+                var productModel = new ProductModel {
+                    Name = $"Product{i}",
+                    Description = "Bulk inserted product",
+                    Price = 399,
+                    Status = ProductStatus.Instock,
+                    CreatedTime = Timestamp.FromDateTime(DateTime.UtcNow)
+                };
+
+                await clientBulk.RequestStream.WriteAsync(productModel);
+            }
+            await clientBulk.RequestStream.CompleteAsync();
+
+            var responseBulk = await clientBulk;
+            Console.WriteLine($"Status: {responseBulk.Success}. Insert Count: {responseBulk.InsertCount}");
             Thread.Sleep(1000);
         }
     }

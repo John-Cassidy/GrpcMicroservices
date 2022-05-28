@@ -80,7 +80,8 @@ namespace ProductGrpc.Services {
             return productModel;
         }
 
-        public override async Task<ProductModel> UpdateProduct(UpdateProductRequest request, ServerCallContext context) {
+        public override async Task<ProductModel> UpdateProduct(UpdateProductRequest request, 
+                                                                ServerCallContext context) {
             var product = _mapper.Map<Product>(request.Product);
 
             bool isExist = await _productDbContext.Product.AnyAsync(p => p.ProductId == product.ProductId);
@@ -100,7 +101,8 @@ namespace ProductGrpc.Services {
             return productModel;
         }
 
-        public override async Task<DeleteProductResponse> DeleteProduct(DeleteProductRequest request, ServerCallContext context) {
+        public override async Task<DeleteProductResponse> DeleteProduct(DeleteProductRequest request, 
+                                                                        ServerCallContext context) {
             var product = await _productDbContext.Product.FindAsync(request.ProductId);
             if (product == null) {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Product with ID={request.ProductId} is not found."));
@@ -111,6 +113,25 @@ namespace ProductGrpc.Services {
 
             var response = new DeleteProductResponse {
                 Success = deleteCount > 0
+            };
+
+            return response;
+        }
+
+        public override async Task<InsertBulkProductResponse> InsertBulkProduct(IAsyncStreamReader<ProductModel> requestStream, 
+                                                                                ServerCallContext context) {
+            // https://csharp.hotexamples.com/examples/-/IAsyncStreamReader/-/php-iasyncstreamreader-class-examples.html
+
+            while (await requestStream.MoveNext()) {
+                var product = _mapper.Map<Product>(requestStream.Current);
+                _productDbContext.Product.Add(product);
+            }
+
+            var insertCount = await _productDbContext.SaveChangesAsync();
+
+            var response = new InsertBulkProductResponse {
+                Success = insertCount > 0,
+                InsertCount = insertCount
             };
 
             return response;
