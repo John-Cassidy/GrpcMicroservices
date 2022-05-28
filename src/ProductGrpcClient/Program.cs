@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using Grpc.Core;
+using Grpc.Net.Client;
 using ProductGrpc.Protos;
 using System;
 using System.Threading;
@@ -16,6 +17,7 @@ namespace ProductGrpcClient {
             var client = new ProductProtoService.ProductProtoServiceClient(channel);
 
             await GetProductAsync(client);
+            await GetAllProducts(client);
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
@@ -30,6 +32,28 @@ namespace ProductGrpcClient {
                                 });
 
             Console.WriteLine("GetProductAsync Response: " + response.ToString());
+            Thread.Sleep(1000);
+        }
+
+        private static async Task GetAllProducts(ProductProtoServiceClient client) {
+            //// GetAllProducts
+            //Console.WriteLine("GetAllProducts started...");
+            //using (var clientData = client.GetAllProducts(new GetAllProductsRequest()))
+            //{
+            //    while (await clientData.ResponseStream.MoveNext(new System.Threading.CancellationToken()))
+            //    {
+            //        var currentProduct = clientData.ResponseStream.Current;
+            //        Console.WriteLine(currentProduct);
+            //    }
+            //}
+            //Thread.Sleep(1000);
+
+            // GetAllProducts with C# 8
+            Console.WriteLine("GetAllProducts with C#8 started...");
+            using var clientData = client.GetAllProducts(new GetAllProductsRequest());
+            await foreach (var responseData in clientData.ResponseStream.ReadAllAsync()) {
+                Console.WriteLine(responseData);
+            }
             Thread.Sleep(1000);
         }
     }

@@ -45,7 +45,28 @@ namespace ProductGrpc.Services {
             var productModel = _mapper.Map<ProductModel>(product);
 
             return productModel;
-        }       
+        }
 
+        public override async Task GetAllProducts(GetAllProductsRequest request,
+                                                    IServerStreamWriter<ProductModel> responseStream,
+                                                    ServerCallContext context) {
+            var productList = await _productDbContext.Product.ToListAsync();
+
+            foreach (var product in productList) {
+                //var productModel = new ProductModel
+                //{
+                //    ProductId = product.Id,
+                //    Name = product.Name,
+                //    Description = product.Description,
+                //    Price = product.Price,
+                //    Status = ProductStatus.Instock,
+                //    CreatedTime = Timestamp.FromDateTime(product.CreateTime)
+                //};
+
+                var productModel = _mapper.Map<ProductModel>(product);
+
+                await responseStream.WriteAsync(productModel);
+            }
+        }
     }
 }
