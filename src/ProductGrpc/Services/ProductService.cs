@@ -68,5 +68,16 @@ namespace ProductGrpc.Services {
                 await responseStream.WriteAsync(productModel);
             }
         }
+
+        public override async Task<ProductModel> AddProduct(AddProductRequest request, 
+                                                            ServerCallContext context) {
+            var product = _mapper.Map<Product>(request.Product);
+
+            _productDbContext.Product.Add(product);
+            await _productDbContext.SaveChangesAsync();
+
+            var productModel = _mapper.Map<ProductModel>(product);
+            return productModel;
+        }
     }
 }

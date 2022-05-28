@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using Grpc.Net.Client;
 using ProductGrpc.Protos;
 using System;
@@ -18,7 +19,8 @@ namespace ProductGrpcClient {
 
             await GetProductAsync(client);
             await GetAllProducts(client);
-
+            await AddProductAsync(client);
+            
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
@@ -54,6 +56,24 @@ namespace ProductGrpcClient {
             await foreach (var responseData in clientData.ResponseStream.ReadAllAsync()) {
                 Console.WriteLine(responseData);
             }
+            Thread.Sleep(1000);
+        }
+
+        private static async Task AddProductAsync(ProductProtoServiceClient client) {
+            // AddProductAsync
+            Console.WriteLine("AddProductAsync started...");
+            var addProductResponse = await client.AddProductAsync(
+                                new AddProductRequest {
+                                    Product = new ProductModel {
+                                        Name = "Red",
+                                        Description = "New Red Phone Mi10T",
+                                        Price = 699,
+                                        Status = ProductStatus.Instock,
+                                        CreatedTime = Timestamp.FromDateTime(DateTime.UtcNow)
+                                    }
+                                });
+
+            Console.WriteLine("AddProduct Response: " + addProductResponse.ToString());
             Thread.Sleep(1000);
         }
     }
