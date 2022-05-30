@@ -15,6 +15,7 @@ namespace ProductWorkerService {
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) => {
                     services.AddHostedService<Worker>();
+                    services.AddTransient<ProductFactory>();
                 });
     }
 }
