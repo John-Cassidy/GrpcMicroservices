@@ -35,7 +35,39 @@ namespace ShoppingCartWorkerService {
 
                 var scModel = await GetOrCreateShoppingCartAsync(scClient);
 
-               
+                // open sc client stream
+                using var scClientStream = scClient.AddItemIntoShoppingCart();
+
+                //2 Retrieve products from product grpc with server stream
+                using var productChannel = GrpcChannel.ForAddress(_config.GetValue<string>("WorkerService:ProductServerUrl"));
+                var productClient = new ProductProtoService.ProductProtoServiceClient(productChannel);
+
+                _logger.LogInformation("GetAllProducts started..");
+                using var clientData = productClient.GetAllProducts(new GetAllProductsRequest());
+                await foreach (var responseData in clientData.ResponseStream.ReadAllAsync()) {
+                    _logger.LogInformation("GetAllProducts Stream Response: {responseData}", responseData);
+
+                    //3 Add sc items into SC with client stream
+                    var addNewScItem = new AddItemIntoShoppingCartRequest {
+                        Username = _config.GetValue<string>("WorkerService:UserName"),
+                        DiscountCode = "CODE_100",
+                        NewCartItem = new ShoppingCartItemModel {
+                            ProductId = responseData.ProductId,
+                            Productname = responseData.Name,
+                            Price = responseData.Price,
+                            Color = "Black",
+                            Quantity = 1
+                        }
+                    };
+
+                    await scClientStream.RequestStream.WriteAsync(addNewScItem);
+                    _logger.LogInformation("ShoppingCart Client Stream Added New Item : {addNewScItem}", addNewScItem);
+                }
+                await scClientStream.RequestStream.CompleteAsync();
+
+                var addItemIntoShoppingCartResponse = await scClientStream;
+                _logger.LogInformation("AddItemIntoShoppingCart Client Stream Response: {addItemIntoShoppingCartResponse}", addItemIntoShoppingCartResponse);
+
 
                 await Task.Delay(_config.GetValue<int>("WorkerService:TaskInterval"), stoppingToken);
             }
